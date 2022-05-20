@@ -75,7 +75,7 @@ public struct RouteNavigationLink<Destination: Routeable, Content: View>: View {
     
     public var body: some View {
         NavigationLink(isActive: $isActive) {
-            if let child = $children.wrappedValue.first {
+            if let child = children.first {
                 RouteView(
                     router: router,
                     path: $path,
@@ -173,7 +173,7 @@ public struct RouteView<Destination: Routeable, Content: View>: View {
                 router: router,
                 isActive: isChildActive,
                 path: $path,
-                children: .constant(children),
+                children: .constant(children.dropFirst()),
                 content: content
             )
         }
