@@ -173,7 +173,7 @@ public struct RouteView<Destination: Routeable, Content: View>: View {
                 router: router,
                 isActive: isChildActive,
                 path: $path,
-                children: .constant(children.dropFirst()),
+                children: .constant(Array(children.dropFirst())),
                 content: content
             )
         }
