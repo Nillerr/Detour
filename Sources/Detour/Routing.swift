@@ -85,6 +85,7 @@ public struct RouteNavigationLink<Destination: Routeable, Content: View>: View {
                 )
             }
         } label: { EmptyView() }
+            .isDetailLink(false)
     }
 }
 
@@ -94,7 +95,11 @@ public struct Routes<Root: View, Destination: Routeable, Content: View>: View {
     let root: Root
     let content: (Destination) -> Content
     
-    public init(router: Router<Destination>, @ViewBuilder root: () -> Root, @ViewBuilder content: @escaping (Destination) -> Content) {
+    public init(
+        router: Router<Destination>,
+        @ViewBuilder root: () -> Root,
+        @ViewBuilder content: @escaping (Destination) -> Content
+    ) {
         self.router = router
         self.root = root()
         self.content = content
@@ -104,7 +109,7 @@ public struct Routes<Root: View, Destination: Routeable, Content: View>: View {
         Binding(
             get: { router.destination != nil },
             set: { newValue in
-                if !newValue && router.destination != nil {
+                if !newValue {
                     router.destination = nil
                 }
             }
@@ -148,7 +153,13 @@ public struct RouteView<Destination: Routeable, Content: View>: View {
     
     let content: (Destination) -> Content
     
-    public init(router: Router<Destination>, path: Binding<[Destination]>, destination: Destination, route: [Destination], @ViewBuilder content: @escaping (Destination) -> Content) {
+    public init(
+        router: Router<Destination>,
+        path: Binding<[Destination]>,
+        destination: Destination,
+        route: [Destination],
+        @ViewBuilder content: @escaping (Destination) -> Content
+    ) {
         self.router = router
         self._path = path
         self.destination = destination
@@ -160,7 +171,7 @@ public struct RouteView<Destination: Routeable, Content: View>: View {
         Binding(
             get: { !route.isEmpty },
             set: { newValue in
-                if let _ = route.first, !newValue {
+                if !newValue {
                     path = destination.path
                 }
             }
