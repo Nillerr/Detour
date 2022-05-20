@@ -56,31 +56,31 @@ public struct RouteNavigationLink<Destination: Routeable, Content: View>: View {
     @Binding var isActive: Bool
     @Binding var path: [Destination]
     
-    let children: [Destination]
+    let route: [Destination]
     let content: (Destination) -> Content
     
     public init(
         router: Router<Destination>,
         isActive: Binding<Bool>,
         path: Binding<[Destination]>,
-        children: [Destination],
+        route: [Destination],
         @ViewBuilder content: @escaping (Destination) -> Content
     ) {
         self.router = router
         self._isActive = isActive
         self._path = path
-        self.children = children
+        self.route = route
         self.content = content
     }
     
     public var body: some View {
         NavigationLink(isActive: $isActive) {
-            if let child = children.first {
+            if let child = route.first {
                 RouteView(
                     router: router,
                     path: $path,
                     destination: child,
-                    children: Array(children.dropFirst()),
+                    route: Array(route.dropFirst()),
                     content: content
                 )
             }
@@ -120,7 +120,7 @@ public struct Routes<Root: View, Destination: Routeable, Content: View>: View {
                     router: router,
                     isActive: isChildActive,
                     path: path,
-                    children: children,
+                    route: route,
                     content: content
                 )
             }
@@ -135,7 +135,7 @@ public struct Routes<Root: View, Destination: Routeable, Content: View>: View {
         )
     }
     
-    var children: [Destination] { router.destination?.path ?? [] }
+    var route: [Destination] { router.destination?.path ?? [] }
 }
 
 public struct RouteView<Destination: Routeable, Content: View>: View {
@@ -144,23 +144,23 @@ public struct RouteView<Destination: Routeable, Content: View>: View {
     @Binding var path: [Destination]
     
     let destination: Destination
-    let children: [Destination]
+    let route: [Destination]
     
     let content: (Destination) -> Content
     
-    public init(router: Router<Destination>, path: Binding<[Destination]>, destination: Destination, children: [Destination], @ViewBuilder content: @escaping (Destination) -> Content) {
+    public init(router: Router<Destination>, path: Binding<[Destination]>, destination: Destination, route: [Destination], @ViewBuilder content: @escaping (Destination) -> Content) {
         self.router = router
         self._path = path
         self.destination = destination
-        self.children = children
+        self.route = route
         self.content = content
     }
     
     var isChildActive: Binding<Bool> {
         Binding(
-            get: { !children.isEmpty },
+            get: { !route.isEmpty },
             set: { newValue in
-                if let _ = children.first, !newValue {
+                if let _ = route.first, !newValue {
                     path = destination.path
                 }
             }
@@ -175,7 +175,7 @@ public struct RouteView<Destination: Routeable, Content: View>: View {
                 router: router,
                 isActive: isChildActive,
                 path: $path,
-                children: Array(children.dropFirst()),
+                route: route,
                 content: content
             )
         }
