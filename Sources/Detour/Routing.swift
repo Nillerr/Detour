@@ -131,6 +131,7 @@ public struct Routes<Root: View, Destination: Routeable, Content: View>: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .navigationViewStyle(.stack)
     }
     
     var path: Binding<[Destination]> {
