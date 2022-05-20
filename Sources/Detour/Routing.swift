@@ -55,21 +55,21 @@ public struct RouteNavigationLink<Destination: Routeable, Content: View>: View {
     
     @Binding var isActive: Bool
     @Binding var path: [Destination]
-    @Binding var children: [Destination]
     
+    let children: [Destination]
     let content: (Destination) -> Content
     
     public init(
         router: Router<Destination>,
         isActive: Binding<Bool>,
         path: Binding<[Destination]>,
-        children: Binding<[Destination]>,
+        children: [Destination],
         @ViewBuilder content: @escaping (Destination) -> Content
     ) {
         self.router = router
         self._isActive = isActive
         self._path = path
-        self._children = children
+        self.children = children
         self.content = content
     }
     
@@ -119,7 +119,7 @@ public struct Routes<Root: View, Destination: Routeable, Content: View>: View {
                 RouteNavigationLink(
                     router: router,
                     isActive: isChildActive,
-                    path: children,
+                    path: path,
                     children: children,
                     content: content
                 )
@@ -128,12 +128,14 @@ public struct Routes<Root: View, Destination: Routeable, Content: View>: View {
         }
     }
     
-    var children: Binding<[Destination]> {
+    var path: Binding<[Destination]> {
         Binding(
             get: { router.destination?.path ?? [] },
             set: { router.destination = $0.last }
         )
     }
+    
+    var children: [Destination] { router.destination?.path ?? [] }
 }
 
 public struct RouteView<Destination: Routeable, Content: View>: View {
@@ -173,7 +175,7 @@ public struct RouteView<Destination: Routeable, Content: View>: View {
                 router: router,
                 isActive: isChildActive,
                 path: $path,
-                children: .constant(Array(children.dropFirst())),
+                children: Array(children.dropFirst()),
                 content: content
             )
         }
