@@ -42,6 +42,7 @@ public class Router<Destination: Routeable>: ObservableObject {
         navigation = work.map { $1 }
         
         work.forEach { iteration, workItem in
+            print("delay: \(iteration * 550)")
             DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(iteration * 550), execute: workItem)
         }
     }
