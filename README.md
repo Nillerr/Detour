@@ -88,7 +88,21 @@ struct AuthenticationView: View {
 Any custom SwiftUI view with the suffix `Screen` may bind a `View`s actions to operations on `Router` or `Presenter`.
 Screens are largely optional, as they can also be implemented inline within a `Destinations` or `Presentations` view.
 
-## Detour Concepts
+```swift
+struct AuthenticationScreen: View {
+  let router: Router
+
+  var body: some View {
+    AuthenticationView(signedIn: { router.navigate(to: nil) })
+  }
+}
+```
+
+### Rule 6: Authentication is completed in a modal
+
+In order to seamlessly transition between from the signed out and the signed in state of your application, we recommend
+presenting a modal where the actual authentication is taking place, and only dismissing it once the session has been 
+established and the _content_ of the root view has changed to the "signed in" state.
 
 ## Presenter
 
