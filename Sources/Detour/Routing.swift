@@ -8,8 +8,11 @@ public class Router<Destination: Routeable>: ObservableObject {
     @Published public internal(set) var destination: Destination? = nil
     
     private var navigation: [DispatchWorkItem] = []
+
+    public var delay: Int
     
-    public init() {
+    public init(delay: Int = 550) {
+        self.delay = delay
     }
     
     public func navigate(to destination: Destination?) {
@@ -42,8 +45,7 @@ public class Router<Destination: Routeable>: ObservableObject {
         navigation = work.map { $1 }
         
         work.forEach { iteration, workItem in
-            print("delay: \(iteration * 550)")
-            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(iteration * 550), execute: workItem)
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(iteration * delay), execute: workItem)
         }
     }
 }
