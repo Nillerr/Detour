@@ -26,6 +26,11 @@ public class Presenter<Presentable>: ObservableObject {
     }
     
     public func dismiss(completion: (() -> Void)? = nil) {
+        guard let _ = presentation else {
+            completion?()
+            return
+        }
+        
         presentation = nil
         
         if let completion = completion {
