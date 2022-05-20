@@ -25,8 +25,14 @@ public class Presenter<Presentable>: ObservableObject {
         presentation = Presentation(presentable: presentable, style: style)
     }
     
-    public func dismiss() {
+    public func dismiss(completion: (() -> Void)? = nil) {
         presentation = nil
+        
+        if let completion = completion {
+            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(550)) {
+                completion()
+            }
+        }
     }
 }
 
