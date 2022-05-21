@@ -18,11 +18,14 @@ public enum PresentationStyle {
 public class Presenter<Presentable>: ObservableObject {
     @Published public internal(set) var presentation: Presentation<Presentable>?
     
-    public init() {
+    public let defaultStyle: PresentationStyle
+    
+    public init(defaultStyle: PresentationStyle = .sheet) {
+        self.defaultStyle = defaultStyle
     }
     
-    public func present(_ presentable: Presentable, style: PresentationStyle = .sheet) {
-        presentation = Presentation(presentable: presentable, style: style)
+    public func present(_ presentable: Presentable, style: PresentationStyle? = nil) {
+        presentation = Presentation(presentable: presentable, style: style ?? defaultStyle)
     }
     
     public func dismiss(completion: (() -> Void)? = nil) {
