@@ -30,22 +30,27 @@ public class Router<Destination: Routeable>: ObservableObject {
         let nextPath = destination.path
         let nextDepth = nextPath.count
         
-        // When navigating deeper than one level into a stack, `NavigationView` will fail to push consequitive views
-        // unless we wait until it finished pushing the previous one.
-        let work = (0..<(nextDepth - currentDepth))
-            .map { iteration -> (Int, DispatchWorkItem) in
-                let workItem = DispatchWorkItem {
-                    let index = currentDepth + iteration
-                    self.destination = nextPath[index]
+        let targetDepth = nextDepth - currentDepth
+        if targetDepth > 0 {
+            // When navigating deeper than one level into a stack, `NavigationView` will fail to push consequitive views
+            // unless we wait until it finished pushing the previous one.
+            let work = (0..<(nextDepth - currentDepth))
+                .map { iteration -> (Int, DispatchWorkItem) in
+                    let workItem = DispatchWorkItem {
+                        let index = currentDepth + iteration
+                        self.destination = nextPath[index]
+                    }
+                    
+                    return (iteration, workItem)
                 }
-                
-                return (iteration, workItem)
+            
+            navigation = work.map { $1 }
+            
+            work.forEach { iteration, workItem in
+                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(iteration * delay), execute: workItem)
             }
-        
-        navigation = work.map { $1 }
-        
-        work.forEach { iteration, workItem in
-            DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(iteration * delay), execute: workItem)
+        } else {
+            self.destination = destination
         }
     }
 }
