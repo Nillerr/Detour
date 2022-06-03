@@ -1,7 +1,18 @@
 import SwiftUI
 
+public enum RouteStyle {
+    case none
+    case navigation(title: String)
+}
+
 public protocol Routeable {
     var path: [Self] { get }
+    
+    var style: RouteStyle { get }
+}
+
+public extension Routeable {
+    var style: RouteStyle { .navigation(title: "") }
 }
 
 public class Router<Destination: Routeable>: ObservableObject {
@@ -91,6 +102,24 @@ public struct RouteNavigationLink<Destination: Routeable, Content: View>: View {
             }
         } label: { EmptyView() }
             .isDetailLink(false)
+            .modifier(NavigationLinkModifier(destination: route.first))
+    }
+}
+
+struct NavigationLinkModifier<Destination: Routeable>: ViewModifier {
+    let destination: Destination?
+    
+    @ViewBuilder func body(content: Content) -> some View {
+        switch destination?.style {
+        case let .navigation(title):
+            content
+                .navigationTitle(title)
+        default:
+            content
+                .navigationTitle("")
+                .navigationBarHidden(true)
+                .navigationBarBackButtonHidden(true)
+        }
     }
 }
 
