@@ -15,21 +15,48 @@ public extension Routeable {
     var style: RouteStyle { .navigation(title: "") }
 }
 
-public class Router<Destination: Routeable>: ObservableObject {
-    @Published public internal(set) var destination: Destination? = nil
-    
-    private var navigation: [DispatchWorkItem] = []
+private extension Sequence {
+    /// Creates a new dictionary from the key-value pairs in the given sequence.
+    func dictionary<Key: Hashable, Value>(uniqueKeysWithValues entrySelector: (Element) -> (Key, Value)) -> [Key: Value] {
+        return Dictionary(uniqueKeysWithValues: map(entrySelector))
+    }
+}
 
-    public var delay: Int
-    
-    public init(delay: Int = 550) {
+public class Router<Destination: Routeable>: ObservableObject {
+    public enum Delay {
+        case milliseconds(Int)
+    }
+
+    private struct DispatchNavigation {
+        let delay: DispatchTimeInterval
+        let workItem: DispatchWorkItem
+
+        func cancel() {
+            workItem.cancel()
+        }
+    }
+
+    @Published public internal(set) var destination: Destination? = nil
+
+    private var navigation: [UUID: DispatchNavigation] = [:]
+
+    public var delay: Delay
+
+    public init(delay: Delay = .milliseconds(550)) {
         self.delay = delay
     }
-    
+
+    private func navigationDelay(iteration: Int) -> DispatchTimeInterval {
+        switch delay {
+        case let .milliseconds(value):
+            return .milliseconds(value * iteration)
+        }
+    }
+
     public func navigate(to destination: Destination?) {
-        navigation.forEach { $0.cancel() }
-        navigation = []
-        
+        navigation.values.forEach { $0.cancel() }
+        navigation.removeAll()
+
         guard let destination = destination else {
             self.destination = nil
             return
@@ -37,28 +64,36 @@ public class Router<Destination: Routeable>: ObservableObject {
 
         let currentPath = self.destination?.path ?? []
         let currentDepth = currentPath.count
-        
+
         let nextPath = destination.path
         let nextDepth = nextPath.count
-        
+
         let targetDepth = nextDepth - currentDepth
         if targetDepth > 0 {
             // When navigating deeper than one level into a stack, `NavigationView` will fail to push consequitive views
             // unless we wait until it finished pushing the previous one.
-            let work = (0..<(nextDepth - currentDepth))
-                .map { iteration -> (Int, DispatchWorkItem) in
-                    let workItem = DispatchWorkItem {
+            let work = (0 ..< (nextDepth - currentDepth))
+                .dictionary { iteration -> (UUID, DispatchNavigation) in
+                    let id = UUID()
+
+                    let delay = navigationDelay(iteration: iteration)
+
+                    let workItem = DispatchWorkItem { [weak self] in
+                        guard let _ = self?.navigation.removeValue(forKey: id) else { return }
+
                         let index = currentDepth + iteration
-                        self.destination = nextPath[index]
+                        self?.destination = nextPath[index]
                     }
-                    
-                    return (iteration, workItem)
+
+                    let navigation = DispatchNavigation(delay: delay, workItem: workItem)
+
+                    return (id, navigation)
                 }
-            
-            navigation = work.map { $1 }
-            
-            work.forEach { iteration, workItem in
-                DispatchQueue.main.asyncAfter(deadline: .now() + .milliseconds(iteration * delay), execute: workItem)
+
+            navigation = work
+
+            work.values.forEach { nav in
+                DispatchQueue.main.asyncAfter(deadline: .now() + nav.delay, execute: nav.workItem)
             }
         } else {
             self.destination = destination
