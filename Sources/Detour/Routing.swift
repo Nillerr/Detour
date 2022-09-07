@@ -2,7 +2,11 @@ import SwiftUI
 
 public enum RouteStyle {
     case none
-    case navigation(title: String)
+    case navigation(
+        title: Text,
+        barHidden: Bool = false,
+        barBackButtonHidden: Bool = false
+    )
 }
 
 public protocol Routeable {
@@ -12,7 +16,7 @@ public protocol Routeable {
 }
 
 public extension Routeable {
-    var style: RouteStyle { .navigation(title: "") }
+    var style: RouteStyle { .navigation(title: Text("")) }
 }
 
 private extension Sequence {
@@ -146,9 +150,11 @@ struct NavigationLinkModifier<Destination: Routeable>: ViewModifier {
     
     @ViewBuilder func body(content: Content) -> some View {
         switch destination?.style {
-        case let .navigation(title):
+        case let .navigation(title, barHidden, barBackButtonHidden):
             content
                 .navigationTitle(title)
+                .navigationBarHidden(barHidden)
+                .navigationBarBackButtonHidden(barBackButtonHidden)
         default:
             content
                 .navigationTitle("")
